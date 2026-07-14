@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Text Encryptor</title>
+<meta name="description" content="Encrypt and decrypt text in your browser with a passphrase using AES-256-GCM and PBKDF2. Portable base64 output. No external dependencies, works offline, nothing leaves your browser.">
+<link rel="canonical" href="https://0xelitesystem.github.io/text-encryptor/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Text Encryptor">
+<meta property="og:description" content="Passphrase-based AES-256-GCM text encryption in your browser. Nothing leaves the page.">
+<meta property="og:url" content="https://0xelitesystem.github.io/text-encryptor/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Text Encryptor",
+  "description": "Encrypt and decrypt text in your browser with a passphrase using AES-256-GCM and PBKDF2. Portable base64 output.",
+  "url": "https://0xelitesystem.github.io/text-encryptor/",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Organization", "name": "0xelitesystem" }
+}
+</script>
+<style>
+:root {
+  --bg: #fafaf6;
+  --surface: #ffffff;
+  --ink: #0a1d1e;
+  --ink-soft: #2c4a4c;
+  --rule: #c8d4d3;
+  --teal: #0f5c60;
+  --teal-deep: #0a4548;
+  --gold: #b07d2a;
+  --gold-deep: #8a611f;
+  --ok: #1a5c2e;
+  --warn: #8a5a00;
+  --err: #8b1a1a;
+  --code-bg: #f0ebe1;
+}
+[data-theme="dark"] {
+  --bg: #0c1c1d;
+  --surface: #14292a;
+  --ink: #e8ebe6;
+  --ink-soft: #b0c0bd;
+  --rule: #2a4042;
+  --teal: #4ab4ba;
+  --teal-deep: #6dc8ce;
+  --gold: #d4a155;
+  --gold-deep: #e6b876;
+  --ok: #6dd380;
+  --warn: #d4a155;
+  --err: #e88080;
+  --code-bg: #0a1718;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  line-height: 1.55;
+}
+.wrap { max-width: 1100px; margin: 0 auto; }
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 2px solid var(--teal);
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--teal);
+}
+.tag {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.75rem;
+  color: var(--gold-deep);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+[data-theme="dark"] .tag { color: var(--gold); }
+.theme-btn {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink-soft);
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.theme-btn:hover { border-color: var(--teal); color: var(--teal); }
+.lede {
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  margin-bottom: 1.5rem;
+  max-width: 64ch;
+}
+.tabs { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
+.tab {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-radius: 2px;
+}
+.tab.active { background: var(--teal); border-color: var(--teal); color: var(--surface); font-weight: 600; }
+[data-theme="dark"] .tab.active { color: var(--bg); }
+.input-box {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  border-radius: 3px;
+}
+label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+textarea, input[type="password"], input[type="text"] {
+  width: 100%;
+  background: var(--code-bg);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  padding: 0.85rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  border-radius: 2px;
+}
+textarea { min-height: 120px; resize: vertical; }
+textarea:focus, input:focus { outline: 2px solid var(--teal); outline-offset: 1px; }
+.field { margin-bottom: 1rem; }
+.input-row { display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap; }
+button {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  border-radius: 2px;
+}
+button:hover { border-color: var(--teal); }
+button.primary {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: var(--surface);
+  font-weight: 600;
+}
+[data-theme="dark"] button.primary { color: var(--bg) !important; }
+button.primary:hover { background: var(--teal-deep); border-color: var(--teal-deep); }
+.results { display: none; }
+.results.show { display: block; }
+.section {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  border-radius: 3px;
+}
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.85rem;
+}
+.section-title { font-size: 0.9rem; font-weight: 600; letter-spacing: 0.02em; }
+.copy-btn { font-size: 0.75rem; padding: 0.35rem 0.7rem; }
+.copy-btn.copied { border-color: var(--ok); color: var(--ok); }
+pre {
+  background: var(--code-bg);
+  padding: 0.85rem;
+  border-radius: 2px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--ink);
+}
+.error-msg {
+  color: var(--err);
+  font-size: 0.85rem;
+  margin-top: 0.85rem;
+  padding: 0.65rem;
+  background: var(--code-bg);
+  border-left: 3px solid var(--err);
+  border-radius: 2px;
+}
+.ok-msg {
+  color: var(--ok);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+.privacy-note { font-size: 0.78rem; color: var(--gold-deep); margin-top: 0.5rem; }
+[data-theme="dark"] .privacy-note { color: var(--gold); }
+.explain {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  border-radius: 3px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+.explain h2 { font-size: 0.95rem; color: var(--ink); margin-bottom: 0.6rem; }
+.explain ul { margin: 0.5rem 0 0.5rem 1.2rem; }
+.explain li { margin-bottom: 0.3rem; }
+.warn-box {
+  border-left: 3px solid var(--warn);
+  padding: 0.65rem 0.85rem;
+  background: var(--code-bg);
+  border-radius: 2px;
+  margin-top: 0.85rem;
+  color: var(--warn);
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+footer {
+  margin-top: 3rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+footer a { color: var(--teal); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+@media (max-width: 640px) {
+  body { padding: 1rem 0.75rem; }
+  h1 { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Text Encryptor</h1>
+    <div class="tag">AES-256-GCM in your browser</div>
+  </div>
+  <button class="theme-btn" id="theme-toggle" type="button">Dark</button>
+</header>
+
+<p class="lede">Encrypt and decrypt text with a passphrase using the Web Crypto API. The output is a portable base64 blob you can paste anywhere. Everything happens locally in your browser and nothing is sent to any server.</p>
+
+<div class="tabs">
+  <button class="tab active" id="tab-encrypt" type="button">Encrypt</button>
+  <button class="tab" id="tab-decrypt" type="button">Decrypt</button>
+</div>
+
+<div class="input-box">
+  <div class="field">
+    <label for="text-in" id="text-label">Plain text</label>
+    <textarea id="text-in" placeholder="Type or paste the text to encrypt" spellcheck="false"></textarea>
+  </div>
+  <div class="field">
+    <label for="pass-in">Passphrase</label>
+    <input type="password" id="pass-in" placeholder="Enter a strong passphrase" autocomplete="off">
+  </div>
+  <div class="input-row">
+    <button class="primary" id="run-btn" type="button">Encrypt</button>
+    <button id="clear-btn" type="button">Clear</button>
+  </div>
+  <div class="privacy-note">All cryptography runs locally with the browser Web Crypto API. No external dependencies, works offline.</div>
+</div>
+
+<div class="results" id="results">
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title" id="out-title">Ciphertext (base64)</div>
+      <button class="copy-btn" id="copy-btn" type="button">Copy</button>
+    </div>
+    <pre id="output"></pre>
+  </div>
+</div>
+
+<div id="msg-box"></div>
+
+<div class="explain">
+  <h2>How the scheme works</h2>
+  <p>Each encryption uses authenticated symmetric encryption with a key derived from your passphrase:</p>
+  <ul>
+    <li><strong>Cipher:</strong> AES-256-GCM (authenticated, so tampering and wrong keys are detected).</li>
+    <li><strong>Key derivation:</strong> PBKDF2 with SHA-256 and 250000 iterations.</li>
+    <li><strong>Random salt:</strong> 16 fresh random bytes per encryption, used for key derivation.</li>
+    <li><strong>Random IV:</strong> 12 fresh random bytes per encryption, used by GCM.</li>
+    <li><strong>Output layout:</strong> salt, then IV, then ciphertext, concatenated and encoded as base64. Everything needed to decrypt (except the passphrase) travels with the blob.</li>
+  </ul>
+  <div class="warn-box">Warning: a forgotten passphrase means the data is unrecoverable. There is no reset, no backdoor, and no recovery. Keep your passphrase safe.</div>
+</div>
+
+<footer>
+  <div>Text Encryptor. Open source, MIT licensed.</div>
+  <div>Built by <a href="https://elitesystem.ai" target="_blank" rel="noopener">elitesystem.ai</a></div>
+</footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+const themeBtn = $("theme-toggle");
+function setTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  themeBtn.textContent = t === "dark" ? "Light" : "Dark";
+}
+themeBtn.addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") || "light";
+  setTheme(cur === "dark" ? "light" : "dark");
+});
+
+const ITERATIONS = 250000;
+const SALT_LEN = 16;
+const IV_LEN = 12;
+
+let mode = "encrypt";
+
+function setMode(m) {
+  mode = m;
+  $("tab-encrypt").classList.toggle("active", m === "encrypt");
+  $("tab-decrypt").classList.toggle("active", m === "decrypt");
+  if (m === "encrypt") {
+    $("text-label").textContent = "Plain text";
+    $("text-in").placeholder = "Type or paste the text to encrypt";
+    $("run-btn").textContent = "Encrypt";
+    $("out-title").textContent = "Ciphertext (base64)";
+  } else {
+    $("text-label").textContent = "Ciphertext (base64 blob)";
+    $("text-in").placeholder = "Paste the base64 blob to decrypt";
+    $("run-btn").textContent = "Decrypt";
+    $("out-title").textContent = "Recovered plain text";
+  }
+  $("results").classList.remove("show");
+  $("msg-box").innerHTML = "";
+}
+$("tab-encrypt").addEventListener("click", () => setMode("encrypt"));
+$("tab-decrypt").addEventListener("click", () => setMode("decrypt"));
+
+function bytesToBase64(bytes) {
+  let s = "";
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
+}
+function base64ToBytes(b64) {
+  const clean = b64.replace(/\s+/g, "");
+  const bin = atob(clean);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+async function deriveKey(passphrase, salt, usage) {
+  const baseKey = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(passphrase),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: salt, iterations: ITERATIONS, hash: "SHA-256" },
+    baseKey,
+    { name: "AES-GCM", length: 256 },
+    false,
+    usage
+  );
+}
+
+async function encryptText() {
+  const text = $("text-in").value;
+  const pass = $("pass-in").value;
+  if (!text) { showError("Enter some text to encrypt."); return; }
+  if (!pass) { showError("Enter a passphrase."); return; }
+
+  const salt = crypto.getRandomValues(new Uint8Array(SALT_LEN));
+  const iv = crypto.getRandomValues(new Uint8Array(IV_LEN));
+  const key = await deriveKey(pass, salt, ["encrypt"]);
+  const cipher = new Uint8Array(await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv: iv },
+    key,
+    new TextEncoder().encode(text)
+  ));
+
+  const combined = new Uint8Array(SALT_LEN + IV_LEN + cipher.length);
+  combined.set(salt, 0);
+  combined.set(iv, SALT_LEN);
+  combined.set(cipher, SALT_LEN + IV_LEN);
+
+  $("output").textContent = bytesToBase64(combined);
+  $("results").classList.add("show");
+  showOk("Encrypted. Copy the blob and store it wherever you like.");
+}
+
+async function decryptText() {
+  const blob = $("text-in").value.trim();
+  const pass = $("pass-in").value;
+  if (!blob) { showError("Paste the base64 blob to decrypt."); return; }
+  if (!pass) { showError("Enter the passphrase."); return; }
+
+  let combined;
+  try {
+    combined = base64ToBytes(blob);
+  } catch (e) {
+    showError("The input is not valid base64. Check that you pasted the whole blob.");
+    return;
+  }
+  if (combined.length < SALT_LEN + IV_LEN + 1) {
+    showError("The blob is too short to be a valid ciphertext.");
+    return;
+  }
+
+  const salt = combined.slice(0, SALT_LEN);
+  const iv = combined.slice(SALT_LEN, SALT_LEN + IV_LEN);
+  const cipher = combined.slice(SALT_LEN + IV_LEN);
+
+  try {
+    const key = await deriveKey(pass, salt, ["decrypt"]);
+    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, cipher);
+    $("output").textContent = new TextDecoder().decode(plain);
+    $("results").classList.add("show");
+    showOk("Decrypted successfully.");
+  } catch (e) {
+    $("results").classList.remove("show");
+    showError("Decryption failed. The passphrase is wrong or the ciphertext was altered. GCM authentication rejected the data.");
+  }
+}
+
+function showError(msg) {
+  $("msg-box").innerHTML = `<div class="error-msg">${escapeHtml(msg)}</div>`;
+}
+function showOk(msg) {
+  $("msg-box").innerHTML = `<div class="ok-msg">${escapeHtml(msg)}</div>`;
+}
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+$("run-btn").addEventListener("click", () => {
+  $("msg-box").innerHTML = "";
+  if (mode === "encrypt") encryptText();
+  else decryptText();
+});
+
+$("clear-btn").addEventListener("click", () => {
+  $("text-in").value = "";
+  $("pass-in").value = "";
+  $("output").textContent = "";
+  $("results").classList.remove("show");
+  $("msg-box").innerHTML = "";
+});
+
+$("copy-btn").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText($("output").textContent);
+    const b = $("copy-btn");
+    b.textContent = "Copied";
+    b.classList.add("copied");
+    setTimeout(() => { b.textContent = "Copy"; b.classList.remove("copied"); }, 1400);
+  } catch (e) {
+    showError("Copy failed. Select the text and copy manually.");
+  }
+});
+
+setTheme("light");
+setMode("encrypt");
+</script>
+</body>
+</html>
